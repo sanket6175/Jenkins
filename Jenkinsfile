@@ -18,16 +18,17 @@ pipeline {
                 sh 'mvn test'
             }
         }
-        stage('Build Docker Image'){
-            steps{
-                script {
-                    def customImage = docker.build("sanket070/petclinic:${env.BUILD_NUMBER}", "./docker")
-                    docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
-                    customImage.push()    
-                }
-            }
+        stage('Build on kubernetes'){
+            steps {
+            withKubeConfig([credentialsId: 'kubeconfig']) {
+                sh 'pwd'
+                sh 'cp -R helm/* .'
+                sh 'ls -ltrh'
+                sh 'pwd'
+                sh '/usr/local/bin/helm upgrade --install petclinic-app petclinic --set image.repository=sanket070/petclinic --set image.tag=${BUILD_NUMBER}'
         }
     }
+}
 
 
 
